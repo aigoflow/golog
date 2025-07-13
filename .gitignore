@@ -35,6 +35,9 @@ data/
 server.log
 logs/
 
+golog
+.claude/
+
 # Configuration files with secrets
 .env
 .env.local
