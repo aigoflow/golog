@@ -1,6 +1,6 @@
 # 🧠 GoLog - Prolog Engine for LLMs
 
-[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yourusername/golog)](https://goreportcard.com/report/github.com/yourusername/golog)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](Dockerfile)
@@ -41,11 +41,11 @@ GoLog bridges the gap between symbolic reasoning and modern AI by providing:
 
 ### 🎓 **Learning-Friendly UI**
 - Browser-based terminal emulator
-- Interactive tutorial with 20+ examples
-- Real-time syntax highlighting
-- Command history with arrow keys
+- Interactive tutorial with 20 step-by-step examples
+- Command history with arrow keys (↑/↓)
 - Dark/Light theme switcher
 - Session management interface
+- Clear terminal command
 
 ## 🚀 Quick Start
 
@@ -102,17 +102,23 @@ result = requests.post(f'http://localhost:8080/api/v1/sessions/{session["id"]}/q
 
 ## 📚 Learning Prolog
 
-The web UI includes an interactive tutorial covering:
-- Basic facts and queries
-- Variables and unification
-- Rules and recursive definitions
-- Built-in predicates
-- Aggregation operations
+The web UI includes an interactive 20-step tutorial covering:
+
+1. **Basic Facts** - Adding and querying simple facts
+2. **Variables** - Using variables in queries
+3. **Rules** - Defining relationships (like grandparent)
+4. **Unification** - The = operator and pattern matching
+5. **Type Checking** - atom/1, var/1, number/1 predicates
+6. **Aggregations** - count/3, sum/3, max/3, min/3
+7. **Date/Time** - Working with timestamps using now/1
+8. **Complex Queries** - Multi-goal queries and backtracking
 
 Access the tutorial by:
 1. Opening http://localhost:8080/ui
 2. Creating a new session
 3. Clicking "Tutorial" in the help sidebar
+4. Click any example to insert it into the terminal
+5. Press Enter to execute and see results
 
 ## 🔌 API Reference
 
@@ -199,7 +205,7 @@ ENABLE_UI=true          # Enable/disable web UI
 ## 📦 Installation
 
 ### Prerequisites
-- Go 1.21+ (for building from source)
+- Go 1.22+ (for building from source)
 - Docker (for container deployment)
 
 ### Build from Source

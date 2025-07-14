@@ -737,6 +737,17 @@ function initTerminal() {
         '<span class="prompt">?- </span>';
     
     terminal.addEventListener('keydown', handleTerminalInput);
+    
+    // Ensure terminal stays focused
+    terminal.addEventListener('click', function() {
+        terminal.focus();
+    });
+    
+    // Focus terminal when clicking anywhere in the terminal container
+    document.querySelector('.terminal-container').addEventListener('click', function() {
+        terminal.focus();
+    });
+    
     terminal.focus();
 }
 
@@ -752,17 +763,27 @@ function handleTerminalInput(event) {
             const promptIndex = lastLine.lastIndexOf('?- ');
             const input = lastLine.substring(promptIndex + 3).trim();
             if (input) {
+                // Add to history
+                terminalHistory.push(input);
+                historyIndex = terminalHistory.length;
+                console.log('Added to history:', input, 'History:', terminalHistory);
                 processInput(input);
             }
         } else {
             appendToTerminal('<br><span class="prompt">?- </span>');
         }
     } else if (event.key === 'ArrowUp') {
+        console.log('ArrowUp detected! History:', terminalHistory, 'Index:', historyIndex);
         event.preventDefault();
+        event.stopPropagation();
         navigateHistory(-1);
+        return false;
     } else if (event.key === 'ArrowDown') {
+        console.log('ArrowDown detected! History:', terminalHistory, 'Index:', historyIndex);
         event.preventDefault();
+        event.stopPropagation();
         navigateHistory(1);
+        return false;
     }
 }
 
@@ -786,9 +807,6 @@ function appendToTerminal(content) {
 
 function processInput(input) {
     if (!input.trim()) return;
-    
-    terminalHistory.push(input);
-    historyIndex = terminalHistory.length;
     
     appendToTerminal('<br>');
     
@@ -1112,27 +1130,44 @@ function clearTerminal() {
 }
 
 function navigateHistory(direction) {
-    if (terminalHistory.length === 0) return;
+    console.log('navigateHistory called with direction:', direction);
+    console.log('Current history:', terminalHistory);
+    console.log('Current index:', historyIndex);
+    
+    if (terminalHistory.length === 0) {
+        console.log('No history items!');
+        return;
+    }
     
     historyIndex += direction;
     if (historyIndex < 0) historyIndex = 0;
     if (historyIndex >= terminalHistory.length) historyIndex = terminalHistory.length;
     
+    console.log('New index:', historyIndex);
+    
     const terminal = document.getElementById('terminal');
     const content = terminal.innerHTML;
-    const lastPromptIndex = content.lastIndexOf('<span class="prompt">?- </span>');
+    const promptText = '<span class="prompt">?- </span>';
+    const lastPromptIndex = content.lastIndexOf(promptText);
     
     if (lastPromptIndex !== -1) {
-        const beforePrompt = content.substring(0, lastPromptIndex + 30);
+        // Get everything before and including the prompt
+        const beforePrompt = content.substring(0, lastPromptIndex + promptText.length);
+        // Get the history item or empty string if at the end
         const historyItem = historyIndex < terminalHistory.length ? terminalHistory[historyIndex] : '';
+        // Update terminal content
         terminal.innerHTML = beforePrompt + historyItem;
         
+        // Position cursor at the end
         const range = document.createRange();
         const sel = window.getSelection();
         range.selectNodeContents(terminal);
         range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
+        
+        // Ensure terminal is focused
+        terminal.focus();
     }
 }
 
