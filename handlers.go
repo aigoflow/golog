@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -172,12 +171,7 @@ func (e *Engine) listSessionsHandler(c *gin.Context) {
 }
 
 func (e *Engine) getSessionHandler(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
-		return
-	}
+	id := c.Param("id")
 
 	session, err := e.GetSession(id)
 	if err != nil {
@@ -189,12 +183,7 @@ func (e *Engine) getSessionHandler(c *gin.Context) {
 }
 
 func (e *Engine) deleteSessionHandler(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
-		return
-	}
+	id := c.Param("id")
 
 	if err := e.DeleteSession(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -205,12 +194,7 @@ func (e *Engine) deleteSessionHandler(c *gin.Context) {
 }
 
 func (e *Engine) addFactHandler(c *gin.Context) {
-	sessionIdStr := c.Param("sessionId")
-	sessionId, err := strconv.Atoi(sessionIdStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
-		return
-	}
+	sessionId := c.Param("sessionId")
 
 	var fact Fact
 	if err := c.ShouldBindJSON(&fact); err != nil {
@@ -236,12 +220,7 @@ func (e *Engine) addFactHandler(c *gin.Context) {
 }
 
 func (e *Engine) addRuleHandler(c *gin.Context) {
-	sessionIdStr := c.Param("sessionId")
-	sessionId, err := strconv.Atoi(sessionIdStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
-		return
-	}
+	sessionId := c.Param("sessionId")
 
 	var rule Rule
 	if err := c.ShouldBindJSON(&rule); err != nil {
@@ -261,12 +240,7 @@ func (e *Engine) addRuleHandler(c *gin.Context) {
 }
 
 func (e *Engine) queryHandler(c *gin.Context) {
-	sessionIdStr := c.Param("sessionId")
-	sessionId, err := strconv.Atoi(sessionIdStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
-		return
-	}
+	sessionId := c.Param("sessionId")
 
 	var query Query
 	if err := c.ShouldBindJSON(&query); err != nil {

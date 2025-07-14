@@ -269,9 +269,16 @@ help:
 	@echo "   backup        - Backup database"
 	@echo "   restore       - Restore database"
 	@echo ""
+	@echo "🐳 Docker:"
+	@echo "   docker-build  - Build Docker image"
+	@echo "   docker-run    - Run Docker container"
+	@echo "   docker-stop   - Stop Docker container"
+	@echo "   docker-clean  - Clean Docker images"
+	@echo ""
 	@echo "💡 Examples:"
 	@echo "   make ui-basic HOST=192.168.1.100 PORT=9000"
 	@echo "   make server PORT=3000"
+	@echo "   make docker-run PORT=9090"
 	@echo "   make custom    # after editing .env file"
 
 status:
@@ -311,6 +318,40 @@ restore:
 	@ls -la $(DB_FILE).backup.* 2>/dev/null || echo "No backups found"
 	@echo ""
 	@echo "To restore, run: cp $(DB_FILE).backup.TIMESTAMP $(DB_FILE)"
+
+# Docker targets
+.PHONY: docker-build docker-run docker-push docker-stop docker-clean
+
+docker-build:
+	@echo "🐳 Building Docker image..."
+	@docker build -t golog:latest .
+	@echo "✅ Docker image built: golog:latest"
+
+docker-run: docker-build
+	@echo "🚀 Running Docker container..."
+	@docker run -d \
+		--name golog \
+		-p $(PORT):8080 \
+		-v $$(pwd)/data:/app/data \
+		golog:latest
+	@echo "✅ Container running at http://localhost:$(PORT)"
+	@echo "📁 Data persisted in ./data directory"
+
+docker-stop:
+	@echo "🛑 Stopping Docker container..."
+	@docker stop golog 2>/dev/null || true
+	@docker rm golog 2>/dev/null || true
+	@echo "✅ Container stopped"
+
+docker-push:
+	@echo "📤 Pushing to GitHub Container Registry..."
+	@echo "Run: docker tag golog:latest ghcr.io/yourusername/golog:latest"
+	@echo "Run: docker push ghcr.io/yourusername/golog:latest"
+
+docker-clean: docker-stop
+	@echo "🧹 Cleaning Docker images..."
+	@docker rmi golog:latest 2>/dev/null || true
+	@echo "✅ Docker cleanup complete"
 
 # Default target
 .DEFAULT_GOAL := help

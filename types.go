@@ -9,7 +9,7 @@ type Term struct {
 }
 
 type Session struct {
-	ID          int       `json:"id,omitempty"`
+	ID          string    `json:"id,omitempty"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -22,14 +22,14 @@ type CreateSessionRequest struct {
 }
 
 type Fact struct {
-	ID        int  `json:"id,omitempty"`
-	SessionID int  `json:"session_id"`
-	Predicate Term `json:"predicate"`
+	ID        int    `json:"id,omitempty"`
+	SessionID string `json:"session_id"`
+	Predicate Term   `json:"predicate"`
 }
 
 type Rule struct {
 	ID        int    `json:"id,omitempty"`
-	SessionID int    `json:"session_id"`
+	SessionID string `json:"session_id"`
 	Head      Term   `json:"head"`
 	Body      []Term `json:"body"`
 }

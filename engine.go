@@ -1,12 +1,14 @@
 package main
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"time"
 
+	"github.com/oklog/ulid/v2"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -23,7 +25,7 @@ func NewEngine(dbPath string) (*Engine, error) {
 
 	createSchema := `
 	CREATE TABLE IF NOT EXISTS sessions (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		id TEXT PRIMARY KEY,
 		name TEXT NOT NULL UNIQUE,
 		description TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -32,7 +34,7 @@ func NewEngine(dbPath string) (*Engine, error) {
 
 	CREATE TABLE IF NOT EXISTS facts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		session_id INTEGER NOT NULL,
+		session_id TEXT NOT NULL,
 		predicate TEXT NOT NULL,
 		data TEXT NOT NULL,
 		FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
@@ -40,7 +42,7 @@ func NewEngine(dbPath string) (*Engine, error) {
 	
 	CREATE TABLE IF NOT EXISTS rules (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		session_id INTEGER NOT NULL,
+		session_id TEXT NOT NULL,
 		head_predicate TEXT NOT NULL,
 		head_data TEXT NOT NULL,
 		body_data TEXT NOT NULL,
@@ -134,7 +136,7 @@ func (e *Engine) occursCheck(varName string, term Term, subst Substitution) bool
 	return false
 }
 
-func (e *Engine) evalBuiltin(goal Term, subst Substitution, sessionID int) ([]Substitution, bool) {
+func (e *Engine) evalBuiltin(goal Term, subst Substitution, sessionID string) ([]Substitution, bool) {
 	if goal.Type != "compound" {
 		return nil, false
 	}
@@ -204,7 +206,7 @@ func (e *Engine) evalBuiltin(goal Term, subst Substitution, sessionID int) ([]Su
 	return nil, false
 }
 
-func (e *Engine) handleCount(goal Term, subst Substitution, sessionID int) ([]Substitution, bool) {
+func (e *Engine) handleCount(goal Term, subst Substitution, sessionID string) ([]Substitution, bool) {
 	if len(goal.Args) != 3 {
 		return []Substitution{}, true
 	}
@@ -222,7 +224,7 @@ func (e *Engine) handleCount(goal Term, subst Substitution, sessionID int) ([]Su
 	return []Substitution{}, true
 }
 
-func (e *Engine) handleSum(goal Term, subst Substitution, sessionID int) ([]Substitution, bool) {
+func (e *Engine) handleSum(goal Term, subst Substitution, sessionID string) ([]Substitution, bool) {
 	if len(goal.Args) != 3 {
 		return []Substitution{}, true
 	}
@@ -251,7 +253,7 @@ func (e *Engine) handleSum(goal Term, subst Substitution, sessionID int) ([]Subs
 	return []Substitution{}, true
 }
 
-func (e *Engine) handleMax(goal Term, subst Substitution, sessionID int) ([]Substitution, bool) {
+func (e *Engine) handleMax(goal Term, subst Substitution, sessionID string) ([]Substitution, bool) {
 	if len(goal.Args) != 3 {
 		return []Substitution{}, true
 	}
@@ -290,7 +292,7 @@ func (e *Engine) handleMax(goal Term, subst Substitution, sessionID int) ([]Subs
 	return []Substitution{}, true
 }
 
-func (e *Engine) handleMin(goal Term, subst Substitution, sessionID int) ([]Substitution, bool) {
+func (e *Engine) handleMin(goal Term, subst Substitution, sessionID string) ([]Substitution, bool) {
 	if len(goal.Args) != 3 {
 		return []Substitution{}, true
 	}
@@ -406,7 +408,7 @@ func (e *Engine) instantiate(term Term, subst Substitution) Term {
 	return term
 }
 
-func (e *Engine) solve(goals []Term, subst Substitution, sessionID int) []Substitution {
+func (e *Engine) solve(goals []Term, subst Substitution, sessionID string) []Substitution {
 	if len(goals) == 0 {
 		return []Substitution{subst}
 	}
@@ -426,7 +428,7 @@ func (e *Engine) solve(goals []Term, subst Substitution, sessionID int) []Substi
 	return e.solveUserDefined(goal, remaining, subst, sessionID)
 }
 
-func (e *Engine) solveUserDefined(goal Term, remaining []Term, subst Substitution, sessionID int) []Substitution {
+func (e *Engine) solveUserDefined(goal Term, remaining []Term, subst Substitution, sessionID string) []Substitution {
 	key := e.makeCacheKey(goal, sessionID)
 	if entry, exists := e.cache[key]; exists && entry.Complete {
 		var results []Substitution
@@ -469,10 +471,10 @@ func (e *Engine) solveUserDefined(goal Term, remaining []Term, subst Substitutio
 	return allResults
 }
 
-func (e *Engine) makeCacheKey(goal Term, sessionID int) TableKey {
+func (e *Engine) makeCacheKey(goal Term, sessionID string) TableKey {
 	argsJSON, _ := json.Marshal(goal.Args)
 	return TableKey{
-		Predicate: fmt.Sprintf("%v_%d", goal.Value, sessionID),
+		Predicate: fmt.Sprintf("%v_%s", goal.Value, sessionID),
 		Args:      string(argsJSON),
 	}
 }
@@ -535,7 +537,7 @@ func (e *Engine) renameTermVars(term Term, varMap map[string]string, suffix stri
 	}
 }
 
-func (e *Engine) loadFacts(goal Term, sessionID int) []Fact {
+func (e *Engine) loadFacts(goal Term, sessionID string) []Fact {
 	predicate := e.extractPredicate(goal)
 	if predicate == "" {
 		return nil
@@ -558,7 +560,7 @@ func (e *Engine) loadFacts(goal Term, sessionID int) []Fact {
 	return facts
 }
 
-func (e *Engine) loadRules(goal Term, sessionID int) []Rule {
+func (e *Engine) loadRules(goal Term, sessionID string) []Rule {
 	predicate := e.extractPredicate(goal)
 	if predicate == "" {
 		return nil
@@ -619,7 +621,7 @@ func (e *Engine) AddRule(rule Rule) error {
 	return err
 }
 
-func (e *Engine) Query(query Query, sessionID int) QueryResult {
+func (e *Engine) Query(query Query, sessionID string) QueryResult {
 	solutions := e.solve(query.Goals, make(Substitution), sessionID)
 
 	var result QueryResult
@@ -673,19 +675,19 @@ func (e *Engine) ClearCache() {
 
 func (e *Engine) CreateSession(req CreateSessionRequest) (*Session, error) {
 	now := time.Now()
-	result, err := e.db.Exec("INSERT INTO sessions (name, description, created_at, updated_at) VALUES (?, ?, ?, ?)",
-		req.Name, req.Description, now, now)
-	if err != nil {
-		return nil, err
-	}
-
-	id, err := result.LastInsertId()
+	
+	// Generate ULID
+	entropy := ulid.Monotonic(rand.Reader, 0)
+	id := ulid.MustNew(ulid.Timestamp(now), entropy).String()
+	
+	_, err := e.db.Exec("INSERT INTO sessions (id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+		id, req.Name, req.Description, now, now)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Session{
-		ID:          int(id),
+		ID:          id,
 		Name:        req.Name,
 		Description: req.Description,
 		CreatedAt:   now,
@@ -693,7 +695,7 @@ func (e *Engine) CreateSession(req CreateSessionRequest) (*Session, error) {
 	}, nil
 }
 
-func (e *Engine) GetSession(id int) (*Session, error) {
+func (e *Engine) GetSession(id string) (*Session, error) {
 	var session Session
 	err := e.db.QueryRow("SELECT id, name, description, created_at, updated_at FROM sessions WHERE id = ?", id).Scan(
 		&session.ID, &session.Name, &session.Description, &session.CreatedAt, &session.UpdatedAt)
@@ -732,12 +734,12 @@ func (e *Engine) ListSessions() ([]Session, error) {
 	return sessions, nil
 }
 
-func (e *Engine) DeleteSession(id int) error {
+func (e *Engine) DeleteSession(id string) error {
 	_, err := e.db.Exec("DELETE FROM sessions WHERE id = ?", id)
 	return err
 }
 
-func (e *Engine) UpdateSessionTimestamp(sessionID int) error {
+func (e *Engine) UpdateSessionTimestamp(sessionID string) error {
 	_, err := e.db.Exec("UPDATE sessions SET updated_at = ? WHERE id = ?", time.Now(), sessionID)
 	return err
 }

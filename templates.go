@@ -7,10 +7,22 @@ const loginTemplate = `<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prolog Engine - Login</title>
     <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --text-primary: #00ff00;
+            --text-secondary: #00ffff;
+            --text-error: #ff0000;
+            --border-color: #00ff00;
+            --button-bg: #00ff00;
+            --button-text: #1a1a1a;
+            --button-hover: #00ffff;
+            --input-bg: #1a1a1a;
+        }
         body {
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            background: #1a1a1a;
-            color: #00ff00;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             margin: 0;
             padding: 0;
             display: flex;
@@ -19,8 +31,8 @@ const loginTemplate = `<!DOCTYPE html>
             min-height: 100vh;
         }
         .login-container {
-            background: #2a2a2a;
-            border: 2px solid #00ff00;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 2rem;
             max-width: 400px;
@@ -30,7 +42,7 @@ const loginTemplate = `<!DOCTYPE html>
             text-align: center;
             font-size: 1.5rem;
             margin-bottom: 1rem;
-            color: #00ff00;
+            color: var(--text-primary);
         }
         .form-group {
             margin-bottom: 1rem;
@@ -38,37 +50,37 @@ const loginTemplate = `<!DOCTYPE html>
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #00ff00;
+            color: var(--text-primary);
         }
         input[type="password"] {
             width: 100%;
             padding: 0.5rem;
-            background: #1a1a1a;
-            border: 1px solid #00ff00;
-            color: #00ff00;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
             font-family: inherit;
             box-sizing: border-box;
         }
         input[type="password"]:focus {
             outline: none;
-            border-color: #00ffff;
-            box-shadow: 0 0 5px #00ffff;
+            border-color: var(--text-secondary);
+            box-shadow: 0 0 5px var(--text-secondary);
         }
         button {
             width: 100%;
             padding: 0.75rem;
-            background: #00ff00;
-            color: #1a1a1a;
+            background: var(--button-bg);
+            color: var(--button-text);
             border: none;
             cursor: pointer;
             font-family: inherit;
             font-weight: bold;
         }
         button:hover {
-            background: #00ffff;
+            background: var(--button-hover);
         }
         .error {
-            color: #ff0000;
+            color: var(--text-error);
             margin-top: 0.5rem;
             text-align: center;
         }
@@ -99,14 +111,64 @@ const uiTemplate = `<!DOCTYPE html>
     <title>{{.Title}}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; background: #1a1a1a; color: #00ff00; height: 100vh; overflow: hidden; }
+        
+        /* Dark Theme (Default) */
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-tertiary: #333;
+            --text-primary: #00ff00;
+            --text-secondary: #00ffff;
+            --text-error: #ff0000;
+            --text-warning: #ffff00;
+            --text-muted: #aaa;
+            --border-color: #00ff00;
+            --scrollbar-thumb: #00ff00;
+            --scrollbar-thumb-hover: #00ffff;
+            --scrollbar-track: #0a0a0a;
+            --button-bg: #00ff00;
+            --button-text: #1a1a1a;
+            --button-hover: #00ffff;
+            --input-bg: #1a1a1a;
+            --modal-overlay: rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Light Theme */
+        body.light-theme {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #e0e0e0;
+            --text-primary: #2d7a2d;
+            --text-secondary: #1976d2;
+            --text-error: #d32f2f;
+            --text-warning: #f57c00;
+            --text-muted: #666;
+            --border-color: #2d7a2d;
+            --scrollbar-thumb: #2d7a2d;
+            --scrollbar-thumb-hover: #1976d2;
+            --scrollbar-track: #e0e0e0;
+            --button-bg: #2d7a2d;
+            --button-text: #ffffff;
+            --button-hover: #1976d2;
+            --input-bg: #ffffff;
+            --modal-overlay: rgba(0, 0, 0, 0.5);
+        }
+        
+        body { 
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; 
+            background: var(--bg-primary); 
+            color: var(--text-primary);
+            height: 100vh; 
+            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
         .container { display: flex; height: 100vh; }
-        .sidebar { width: 250px; background: #2a2a2a; border-right: 2px solid #00ff00; padding: 1rem; overflow-y: auto; }
+        .sidebar { width: 250px; background: var(--bg-secondary); border-right: 2px solid var(--border-color); padding: 1rem; overflow-y: auto; }
         .main-content { flex: 1; display: flex; flex-direction: column; }
-        .header { background: #2a2a2a; border-bottom: 2px solid #00ff00; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .header { background: var(--bg-secondary); border-bottom: 2px solid var(--border-color); padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
         .terminal-container { 
             flex: 1; 
-            background: #1a1a1a; 
+            background: var(--bg-primary); 
             position: relative; 
             overflow: hidden;
             display: flex;
@@ -114,33 +176,33 @@ const uiTemplate = `<!DOCTYPE html>
         }
         .help-sidebar { 
             width: 300px; 
-            background: #2a2a2a; 
-            border-left: 2px solid #00ff00; 
+            background: var(--bg-secondary); 
+            border-left: 2px solid var(--border-color); 
             padding: 1rem; 
             overflow-y: auto; 
             transition: width 0.3s ease;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #2a2a2a;
+            scrollbar-color: var(--scrollbar-thumb) var(--bg-secondary);
         }
         .help-sidebar::-webkit-scrollbar {
             width: 8px;
         }
         .help-sidebar::-webkit-scrollbar-track {
-            background: #2a2a2a;
+            background: var(--bg-secondary);
         }
         .help-sidebar::-webkit-scrollbar-thumb {
-            background: #00ff00;
+            background: var(--scrollbar-thumb);
             border-radius: 4px;
         }
         .help-sidebar::-webkit-scrollbar-thumb:hover {
-            background: #00ffff;
+            background: var(--scrollbar-thumb-hover);
         }
         .help-sidebar.collapsed { width: 0; padding: 0; overflow: hidden; }
         .terminal { 
             width: 100%; 
             height: 100%; 
-            background: #1a1a1a; 
-            color: #00ff00; 
+            background: var(--bg-primary); 
+            color: var(--text-primary); 
             font-family: inherit; 
             font-size: 14px; 
             padding: 1rem; 
@@ -150,68 +212,180 @@ const uiTemplate = `<!DOCTYPE html>
             overflow-y: scroll; 
             overflow-x: hidden;
             scrollbar-width: thin;
-            scrollbar-color: #00ff00 #1a1a1a;
+            scrollbar-color: var(--scrollbar-thumb) var(--bg-primary);
         }
         .terminal::-webkit-scrollbar {
             width: 12px;
         }
         .terminal::-webkit-scrollbar-track {
-            background: #0a0a0a;
-            border: 1px solid #00ff00;
+            background: var(--scrollbar-track);
+            border: 1px solid var(--border-color);
         }
         .terminal::-webkit-scrollbar-thumb {
-            background: #00ff00;
+            background: var(--scrollbar-thumb);
             border-radius: 6px;
-            border: 1px solid #0a0a0a;
+            border: 1px solid var(--scrollbar-track);
         }
         .terminal::-webkit-scrollbar-thumb:hover {
-            background: #00ffff;
+            background: var(--scrollbar-thumb-hover);
         }
         .session-list { margin-bottom: 1rem; }
-        .session-item { background: #1a1a1a; border: 1px solid #555; margin-bottom: 0.5rem; padding: 0.5rem; cursor: pointer; transition: all 0.2s; }
-        .session-item:hover { border-color: #00ff00; background: #333; }
-        .session-item.active { border-color: #00ff00; background: #333; }
-        .session-name { font-weight: bold; color: #00ffff; }
-        .session-desc { font-size: 0.8rem; color: #aaa; margin-top: 0.2rem; }
-        .btn { background: #00ff00; color: #1a1a1a; border: none; padding: 0.5rem 1rem; cursor: pointer; font-family: inherit; margin: 0.2rem; }
-        .btn:hover { background: #00ffff; }
+        .session-item { 
+            background: var(--bg-primary); 
+            border: 1px solid var(--bg-tertiary); 
+            margin-bottom: 0.5rem; 
+            padding: 0.5rem; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        .session-item:hover { 
+            border-color: var(--border-color); 
+            background: var(--bg-tertiary); 
+        }
+        .session-item.active { 
+            border-color: var(--border-color); 
+            background: var(--bg-tertiary); 
+        }
+        .session-name { 
+            font-weight: bold; 
+            color: var(--text-secondary); 
+        }
+        .session-desc { 
+            font-size: 0.8rem; 
+            color: var(--text-muted); 
+            margin-top: 0.2rem; 
+        }
+        .session-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .btn { 
+            background: var(--button-bg); 
+            color: var(--button-text); 
+            border: none; 
+            padding: 0.5rem 1rem; 
+            cursor: pointer; 
+            font-family: inherit; 
+            margin: 0.2rem;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn:hover { 
+            background: var(--button-hover); 
+        }
         .btn-small { padding: 0.2rem 0.5rem; font-size: 0.8rem; }
         .input-group { margin-bottom: 0.5rem; }
-        .input-group input { width: 100%; background: #1a1a1a; border: 1px solid #555; color: #00ff00; padding: 0.5rem; font-family: inherit; }
-        .input-group input:focus { outline: none; border-color: #00ff00; }
-        .toggle-help { background: #555; color: #fff; border: none; padding: 0.5rem; cursor: pointer; font-family: inherit; }
+        .input-group input { 
+            width: 100%; 
+            background: var(--input-bg); 
+            border: 1px solid var(--bg-tertiary); 
+            color: var(--text-primary); 
+            padding: 0.5rem; 
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+        .input-group input:focus { 
+            outline: none; 
+            border-color: var(--border-color); 
+        }
+        .header-buttons { display: flex; gap: 0.5rem; align-items: center; }
+        .toggle-help, .theme-toggle, .clear-terminal { 
+            background: var(--bg-tertiary); 
+            color: var(--text-primary); 
+            border: 1px solid var(--border-color); 
+            padding: 0.5rem 1rem; 
+            cursor: pointer; 
+            font-family: inherit;
+            transition: all 0.3s ease;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+        .toggle-help:hover, .theme-toggle:hover, .clear-terminal:hover { 
+            background: var(--button-bg); 
+            color: var(--button-text); 
+        }
+        .theme-toggle {
+            font-size: 1.2rem;
+            width: 40px;
+            padding: 0.5rem;
+        }
         .help-section { margin-bottom: 1.5rem; }
-        .help-title { color: #00ffff; font-weight: bold; margin-bottom: 0.5rem; border-bottom: 1px solid #555; padding-bottom: 0.2rem; }
-        .example { background: #1a1a1a; border: 1px solid #555; padding: 0.5rem; margin: 0.5rem 0; cursor: pointer; transition: all 0.2s; }
-        .example:hover { border-color: #00ff00; }
-        .example-title { color: #00ffff; font-weight: bold; margin-bottom: 0.2rem; }
-        .example-code { color: #ffff00; font-size: 0.9rem; margin-bottom: 0.2rem; }
-        .example-desc { color: #aaa; font-size: 0.8rem; }
+        .help-title { 
+            color: var(--text-secondary); 
+            font-weight: bold; 
+            margin-bottom: 0.5rem; 
+            border-bottom: 1px solid var(--bg-tertiary); 
+            padding-bottom: 0.2rem; 
+        }
+        .example { 
+            background: var(--bg-primary); 
+            border: 1px solid var(--bg-tertiary); 
+            padding: 0.5rem; 
+            margin: 0.5rem 0; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        .example:hover { 
+            border-color: var(--border-color); 
+        }
+        .example-title { color: var(--text-secondary); font-weight: bold; margin-bottom: 0.2rem; }
+        .example-code { color: var(--text-warning); font-size: 0.9rem; margin-bottom: 0.2rem; }
+        .example-desc { color: var(--text-muted); font-size: 0.8rem; }
         .terminal-output { white-space: pre-wrap; word-wrap: break-word; }
-        .prompt { color: #00ffff; }
-        .error { color: #ff0000; }
-        .success { color: #00ff00; }
-        .warning { color: #ffff00; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); }
-        .modal-content { background-color: #2a2a2a; margin: 15% auto; padding: 20px; border: 2px solid #00ff00; width: 400px; max-width: 90%; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close:hover { color: #00ff00; }
+        .prompt { color: var(--text-secondary); }
+        .error { color: var(--text-error); }
+        .success { color: var(--text-primary); }
+        .warning { color: var(--text-warning); }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: var(--modal-overlay); 
+        }
+        .modal-content { 
+            background-color: var(--bg-secondary); 
+            margin: 15% auto; 
+            padding: 20px; 
+            border: 2px solid var(--border-color); 
+            width: 400px; 
+            max-width: 90%; 
+        }
+        .close { 
+            color: var(--text-muted); 
+            float: right; 
+            font-size: 28px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        .close:hover { 
+            color: var(--text-primary); 
+        }
         .help-tabs { display: flex; margin-bottom: 1rem; }
-        .tab-button { background: #333; color: #fff; border: none; padding: 0.5rem 1rem; cursor: pointer; font-family: inherit; margin-right: 0.2rem; }
-        .tab-button.active { background: #00ff00; color: #1a1a1a; }
-        .tab-button:hover { background: #555; }
-        .tab-button.active:hover { background: #00ffff; color: #1a1a1a; }
+        .tab-button { background: var(--bg-tertiary); color: var(--text-primary); border: none; padding: 0.5rem 1rem; cursor: pointer; font-family: inherit; margin-right: 0.2rem; }
+        .tab-button.active { background: var(--button-bg); color: var(--button-text); }
+        .tab-button:hover { background: var(--bg-secondary); }
+        .tab-button.active:hover { background: var(--button-hover); color: var(--button-text); }
         .tab-content { }
-        .tutorial-progress { background: #1a1a1a; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #555; display: flex; justify-content: space-between; align-items: center; }
+        .tutorial-progress { background: var(--bg-primary); padding: 0.5rem; margin-bottom: 1rem; border: 1px solid var(--bg-tertiary); display: flex; justify-content: space-between; align-items: center; }
         .tutorial-step { margin-bottom: 1.5rem; }
-        .step-title { color: #00ffff; font-weight: bold; margin-bottom: 0.5rem; }
-        .step-desc { color: #aaa; margin-bottom: 0.5rem; font-size: 0.9rem; }
-        .step-command { background: #1a1a1a; border: 2px solid #555; padding: 1rem; cursor: pointer; transition: all 0.2s; }
-        .step-command:hover { border-color: #00ff00; }
-        .step-command.completed { border-color: #00ff00; background: #002200; }
-        .cmd-text { color: #ffff00; font-weight: bold; margin-bottom: 0.5rem; }
-        .cmd-expected { color: #00ff00; font-size: 0.8rem; }
-        .tutorial-complete { text-align: center; padding: 2rem; background: #1a1a1a; border: 2px solid #00ff00; }
+        .step-title { color: var(--text-secondary); font-weight: bold; margin-bottom: 0.5rem; }
+        .step-desc { color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .step-command { background: var(--bg-primary); border: 2px solid var(--bg-tertiary); padding: 1rem; cursor: pointer; transition: all 0.2s; }
+        .step-command:hover { border-color: var(--border-color); }
+        .step-command.completed { border-color: var(--border-color); opacity: 0.7; }
+        .cmd-text { color: var(--text-warning); font-weight: bold; margin-bottom: 0.5rem; }
+        .cmd-expected { color: var(--text-primary); font-size: 0.8rem; }
+        .tutorial-complete { text-align: center; padding: 2rem; background: var(--bg-primary); border: 2px solid var(--border-color); }
     </style>
 </head>
 <body>
@@ -219,9 +393,11 @@ const uiTemplate = `<!DOCTYPE html>
         <div class="sidebar">
             <h3>Sessions</h3>
             <div class="session-list" id="sessionList"></div>
-            <button class="btn" onclick="showCreateSessionModal()">New Session</button>
-            <button class="btn btn-small" onclick="deleteCurrentSession()">Delete Current</button>
-            <button class="btn btn-small" onclick="clearCache()">Clear Cache</button>
+            <div class="session-buttons">
+                <button class="btn" onclick="showCreateSessionModal()">New Session</button>
+                <button class="btn btn-small" onclick="deleteCurrentSession()">Delete Current</button>
+                <button class="btn btn-small" onclick="clearCache()">Clear Cache</button>
+            </div>
             <div style="margin-top: 2rem;">
                 <h4>Current Session</h4>
                 <div id="currentSessionInfo">No session selected</div>
@@ -231,7 +407,13 @@ const uiTemplate = `<!DOCTYPE html>
         <div class="main-content">
             <div class="header">
                 <h2>🧠 Prolog Engine REPL</h2>
-                <button class="toggle-help" onclick="toggleHelp()">Toggle Help</button>
+                <div class="header-buttons">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                    <button class="clear-terminal" onclick="clearTerminal()" title="Clear Terminal">Clear</button>
+                    <button class="toggle-help" onclick="toggleHelp()">Toggle Help</button>
+                </div>
             </div>
             <div class="terminal-container">
                 <div id="terminal" class="terminal" contenteditable="true"></div>
@@ -908,7 +1090,25 @@ function showHelp() {
 
 function clearTerminal() {
     const terminal = document.getElementById('terminal');
-    terminal.innerHTML = '<span class="prompt">?- </span>';
+    terminal.innerHTML = '';
+    
+    if (currentSession) {
+        terminal.innerHTML = '<div><span class="success">Session: ' + currentSession.name + '</span></div>';
+    } else {
+        terminal.innerHTML = '<div><span class="warning">No session selected. Create or select a session.</span></div>';
+    }
+    
+    terminal.innerHTML += '<div><span class="prompt">?- </span></div>';
+    
+    // Position cursor after the prompt
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(terminal);
+    range.collapse(false);  // false = collapse to end
+    sel.removeAllRanges();
+    sel.addRange(range);
+    
+    terminal.focus();
 }
 
 function navigateHistory(direction) {
@@ -1027,8 +1227,10 @@ function createSession() {
             alert('Error creating session: ' + data.error);
         } else {
             hideCreateSessionModal();
+            // Automatically select the new session
+            selectSession(data);
             loadSessions();
-            appendToTerminal('<br><span class="success">Session "' + name + '" created!</span><br>');
+            appendToTerminal('<br><span class="success">Session "' + name + '" created and activated!</span><br>');
             appendToTerminal('<span class="prompt">?- </span>');
         }
     })
@@ -1057,10 +1259,26 @@ function deleteCurrentSession() {
             alert('Error deleting session: ' + data.error);
         } else {
             appendToTerminal('<br><span class="warning">Session "' + currentSession.name + '" deleted.</span><br>');
+            const deletedSessionId = currentSession.id;
             currentSession = null;
-            loadSessions();
+            
+            // Remove the deleted session from the local array
+            sessions = sessions.filter(s => s.id !== deletedSessionId);
+            
+            // Re-render sessions and update UI
+            renderSessions();
             updateCurrentSessionInfo();
-            appendToTerminal('<span class="prompt">?- </span>');
+            
+            // Clear terminal and show appropriate message
+            const terminal = document.getElementById('terminal');
+            if (sessions.length === 0) {
+                terminal.innerHTML = '<div><span class="warning">No sessions available. Create a new session to start.</span></div>';
+                terminal.innerHTML += '<div><span class="prompt">?- </span></div>';
+            } else {
+                // Auto-select the first remaining session
+                selectSession(sessions[0]);
+                appendToTerminal('<span class="prompt">?- </span>');
+            }
         }
     })
     .catch(error => {
@@ -1101,6 +1319,30 @@ function toggleHelp() {
     const sidebar = document.getElementById('helpSidebar');
     sidebar.classList.toggle('collapsed');
 }
+
+function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.getElementById('themeIcon');
+    
+    if (body.classList.contains('light-theme')) {
+        body.classList.remove('light-theme');
+        themeIcon.textContent = '🌙';
+        localStorage.setItem('theme', 'dark');
+    } else {
+        body.classList.add('light-theme');
+        themeIcon.textContent = '☀️';
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+// Load saved theme preference
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        document.getElementById('themeIcon').textContent = '☀️';
+    }
+});
 
 function insertExample(example) {
     const terminal = document.getElementById('terminal');

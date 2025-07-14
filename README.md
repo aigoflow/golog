@@ -1,276 +1,235 @@
-# 🧠 Prolog Engine
+# 🧠 GoLog - Prolog Engine for LLMs
 
-A clean, modern Prolog engine with REST API and optional web UI, built in Go.
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yourusername/golog)](https://goreportcard.com/report/github.com/yourusername/golog)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](Dockerfile)
 
-## Features
+A modern Prolog engine designed as a reasoning backend for Large Language Models (LLMs), with a clean REST API and an intuitive web UI for learning and experimentation.
 
-✅ **Core Prolog Engine**
+## 🎯 Purpose
+
+GoLog bridges the gap between symbolic reasoning and modern AI by providing:
+- **For LLMs**: A structured reasoning engine accessible via REST API
+- **For Developers**: Easy integration with AI applications needing logical inference
+- **For Learners**: An interactive web UI to explore Prolog without installation hassles
+
+## 📸 Screenshots
+
+<table>
+<tr>
+<td><img src="screen-dark.png" alt="Dark Theme" width="500"/><br/><em>Dark Theme</em></td>
+<td><img src="screen-light.png" alt="Light Theme" width="500"/><br/><em>Light Theme</em></td>
+</tr>
+</table>
+
+## ✨ Features
+
+### 🤖 **LLM-Ready Backend**
+- RESTful API with JSON input/output
+- Session-based knowledge isolation
+- ULID-based session IDs for distributed systems
+- Optional API key authentication
+- Structured query responses perfect for LLM parsing
+
+### 🧠 **Core Prolog Engine**
 - Unification & Backtracking
-- Tabling/Memoization 
+- Tabling/Memoization for performance
 - Built-in predicates (=, atom, var, number, now, date functions)
 - Aggregation functions (count, sum, max, min)
-
-✅ **Session Management**
 - SQLite persistence
-- Named sessions with descriptions
-- Session-isolated facts and rules
 
-✅ **REST API**
-- Complete CRUD operations for sessions, facts, rules
-- Query execution with JSON responses
-- Optional API key protection
-
-✅ **Web UI** (Optional)
+### 🎓 **Learning-Friendly UI**
 - Browser-based terminal emulator
-- Interactive help sidebar with examples
+- Interactive tutorial with 20+ examples
+- Real-time syntax highlighting
+- Command history with arrow keys
+- Dark/Light theme switcher
 - Session management interface
-- Optional password protection
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Basic Usage
+### Using Docker
 ```bash
-# Build and start with basic UI
+docker run -p 8080:8080 yourusername/golog
+```
+
+### Using Make
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/golog
+cd golog
+
+# Start with UI for learning
 make ui-basic
 
-# API only (no UI)
+# Start API-only for LLM integration
 make api-only
-
-# With password protection
-make ui-protected
 ```
 
-### 2. Development
+### For LLM Integration
+```python
+import requests
+
+# Create a session
+session = requests.post('http://localhost:8080/api/v1/sessions', 
+    json={'name': 'llm-reasoning', 'description': 'LLM knowledge base'}).json()
+
+# Add facts
+requests.post(f'http://localhost:8080/api/v1/sessions/{session["id"]}/facts',
+    json={'predicate': {
+        'type': 'compound',
+        'value': 'parent',
+        'args': [
+            {'type': 'atom', 'value': 'alice'},
+            {'type': 'atom', 'value': 'bob'}
+        ]
+    }})
+
+# Query
+result = requests.post(f'http://localhost:8080/api/v1/sessions/{session["id"]}/query',
+    json={'goals': [{
+        'type': 'compound',
+        'value': 'parent',
+        'args': [
+            {'type': 'variable', 'value': 'X'},
+            {'type': 'atom', 'value': 'bob'}
+        ]
+    }]}).json()
+
+# Returns: {"solutions": [{"bindings": {"X": {"type": "atom", "value": "alice"}}, "success": true}]}
+```
+
+## 📚 Learning Prolog
+
+The web UI includes an interactive tutorial covering:
+- Basic facts and queries
+- Variables and unification
+- Rules and recursive definitions
+- Built-in predicates
+- Aggregation operations
+
+Access the tutorial by:
+1. Opening http://localhost:8080/ui
+2. Creating a new session
+3. Clicking "Tutorial" in the help sidebar
+
+## 🔌 API Reference
+
+### Session Management
 ```bash
-# Development mode with auto-rebuild
-make dev
-
-# Run tests
-make test
-
-# Clean build
-make clean build
+POST   /api/v1/sessions          # Create session (returns ULID)
+GET    /api/v1/sessions          # List all sessions
+GET    /api/v1/sessions/:id      # Get session details
+DELETE /api/v1/sessions/:id      # Delete session
 ```
 
-### 3. Production
+### Knowledge Base Operations
 ```bash
-# Production server (all interfaces, random password)
-make server
-
-# Maximum security (localhost only, random keys)
-make full-secure
+POST   /api/v1/sessions/:id/facts   # Add fact
+POST   /api/v1/sessions/:id/rules   # Add rule
+POST   /api/v1/sessions/:id/query   # Execute query
 ```
 
-## Available Make Targets
+### Example: Creating a Rule
+```json
+POST /api/v1/sessions/:id/rules
+{
+  "head": {
+    "type": "compound",
+    "value": "grandparent",
+    "args": [
+      {"type": "variable", "value": "X"},
+      {"type": "variable", "value": "Z"}
+    ]
+  },
+  "body": [
+    {
+      "type": "compound",
+      "value": "parent",
+      "args": [
+        {"type": "variable", "value": "X"},
+        {"type": "variable", "value": "Y"}
+      ]
+    },
+    {
+      "type": "compound",
+      "value": "parent",
+      "args": [
+        {"type": "variable", "value": "Y"},
+        {"type": "variable", "value": "Z"}
+      ]
+    }
+  ]
+}
+```
 
-### 📋 Basic Commands
-- `make build` - Build the application
-- `make clean` - Clean build artifacts and database  
-- `make test` - Run all tests
-- `make deps` - Update dependencies
+## 🔮 Coming Soon: MCP & OpenMCP Integration
 
-### 🚀 Development
-- `make dev` - Start development server
-- `make dev-watch` - Start with file watching (requires `entr`)
-- `make dev-clean` - Clean build and start fresh
+We're actively developing support for the Model Context Protocol (MCP) and OpenMCP interfaces to make GoLog even easier to integrate with chatbots and AI applications:
 
-### 🌐 Server Modes
-- `make api-only` - API only, no UI
-- `make ui-basic` - Basic UI without password
-- `make ui-protected` - UI with password (admin123)
-- `make server` - Production mode (0.0.0.0, random password)
+- **MCP Support**: Native implementation of the Model Context Protocol for seamless integration with MCP-compatible AI tools
+- **OpenMCP API**: RESTful interface following the OpenMCP specification, enabling:
+  - Multi-language SDK support
+  - Enterprise-ready authentication (API keys, JWT, OAuth2)
+  - WebSocket and Server-Sent Events for real-time reasoning
+  - Standardized AI-data integration patterns
 
-### 🔒 Secure Modes  
-- `make api-secure` - API with random API key
-- `make ui-secure` - UI with random password and API key
-- `make full-secure` - Maximum security (localhost only)
+This will allow GoLog to serve as a powerful reasoning backend for any MCP-compatible chatbot or LLM application, providing structured logical inference capabilities through industry-standard protocols.
 
-### ⚙️ Custom Configuration
-- `make config` - Create .env from template
-- `make custom` - Start with custom .env configuration
+## 🔧 Configuration
 
-### 🎭 Demo & Testing
-- `make demo` - Start demo mode
-- `make demo-data` - Demo with sample data  
-- `make demo-reset` - Reset demo environment
-
-### 🛠️ Utilities
-- `make status` - Show current configuration
-- `make backup` - Backup database
-- `make help` - Show all commands
-
-## Configuration
-
-The application can be configured via environment variables or `.env` file:
-
+Environment variables (or `.env` file):
 ```bash
-# Server configuration
-HOST=localhost          # Default: localhost
-PORT=8080               # Default: 8080
-
-# Security (optional)
-API_KEY=your-secret-key # Protects API routes
-UI_PASSWORD=admin123    # Protects web UI
-
-# Features (optional)  
-ENABLE_UI=true          # Enable web interface
+HOST=localhost          # Server host
+PORT=8080               # Server port
+API_KEY=secret          # Optional API key
+UI_PASSWORD=admin123    # Optional UI password
+ENABLE_UI=true          # Enable/disable web UI
 ```
 
-### Custom Configuration
+## 🏗️ Architecture
 
-```bash
-# Create config template
-make config
+- **Go + Gin**: Fast, concurrent web server
+- **SQLite**: Persistent storage with session isolation
+- **ULID**: Distributed-friendly session identifiers
+- **Embedded UI**: Single binary deployment
+- **Clean separation**: Engine, API, and UI layers
 
-# Edit .env file with your settings
-nano .env
-
-# Start with custom config
-make custom
-```
-
-## API Usage
-
-### Sessions
-```bash
-# Create session
-curl -X POST http://localhost:8080/api/v1/sessions \
-  -H "Content-Type: application/json" \
-  -d '{"name":"test","description":"Test session"}'
-
-# List sessions  
-curl http://localhost:8080/api/v1/sessions
-```
-
-### Facts & Rules
-```bash
-# Add fact
-curl -X POST http://localhost:8080/api/v1/sessions/1/facts \
-  -H "Content-Type: application/json" \
-  -d '{"predicate":{"type":"compound","value":"parent","args":[{"type":"atom","value":"tom"},{"type":"atom","value":"bob"}]}}'
-
-# Add rule
-curl -X POST http://localhost:8080/api/v1/sessions/1/rules \
-  -H "Content-Type: application/json" \
-  -d '{"head":{"type":"compound","value":"grandparent","args":[...]},"body":[...]}'
-```
-
-### Queries
-```bash
-# Execute query
-curl -X POST http://localhost:8080/api/v1/sessions/1/query \
-  -H "Content-Type: application/json" \
-  -d '{"goals":[{"type":"compound","value":"parent","args":[{"type":"variable","value":"X"},{"type":"atom","value":"bob"}]}]}'
-```
-
-## Web UI Usage
-
-1. Start with UI enabled: `make ui-basic`
-2. Open browser to `http://localhost:8080/ui`
-3. Create or select a session
-4. Use the terminal to interact with Prolog:
-
-```prolog
-% Add facts
-parent(tom, bob).
-parent(bob, alice).
-
-% Add rules  
-grandparent(X, Z) :- parent(X, Y), parent(Y, Z).
-
-% Query
-?- grandparent(tom, X)
-```
-
-### Terminal Commands
-- `help` - Show available commands
-- `clear` - Clear terminal
-- `sessions` - List all sessions
-- Use ↑/↓ arrows for command history
-
-## Examples
-
-### Family Relationships
-```prolog
-% Facts
-parent(tom, bob).
-parent(bob, alice).
-parent(alice, charlie).
-
-% Rules
-grandparent(X, Z) :- parent(X, Y), parent(Y, Z).
-ancestor(X, Y) :- parent(X, Y).
-ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
-
-% Queries  
-?- grandparent(tom, X)     % Find grandchildren of tom
-?- ancestor(tom, charlie)  % Check if tom is ancestor of charlie
-```
-
-### Aggregation
-```prolog  
-% Score facts
-score(alice, 95).
-score(bob, 87).
-score(charlie, 92).
-
-% Queries
-?- count(_, score(X, Y), N)           % Count all scores
-?- sum(Score, score(X, Score), Total) % Sum all scores  
-?- max(Score, score(X, Score), Max)   % Find highest score
-```
-
-### Date/Time
-```prolog
-% Get current time
-?- now(X)
-
-% Date comparisons
-?- date_before(date("2023-01-01"), date("2023-12-31"))
-?- days_between(date("2023-01-01"), date("2023-01-31"), Days)
-```
-
-## Development
+## 📦 Installation
 
 ### Prerequisites
-- Go 1.21+
-- Make
-- SQLite3
+- Go 1.21+ (for building from source)
+- Docker (for container deployment)
 
-### Building from Source
+### Build from Source
 ```bash
-git clone <repository>
+git clone https://github.com/yourusername/golog
 cd golog
 make deps
 make build
-make test
 ```
 
-### File Watching (Optional)
-Install `entr` for automatic rebuilds:
+### Docker Build
 ```bash
-# macOS
-brew install entr
-
-# Ubuntu/Debian  
-sudo apt-get install entr
-
-# Then use
-make dev-watch
+docker build -t golog .
+docker run -p 8080:8080 golog
 ```
 
-## Architecture
+## 🤝 Contributing
 
-- **types.go** - Core data structures and types
-- **engine.go** - Prolog engine with SQLite persistence  
-- **handlers.go** - HTTP handlers and middleware
-- **templates.go** - Embedded HTML templates and JavaScript
-- **main.go** - Application entry point
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
-## License
+## 📄 License
 
-[Add your license information here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contributing
+## 🙏 Acknowledgments
 
-[Add contribution guidelines here]
+- Inspired by the need for symbolic reasoning in modern AI systems
+- Built with love for both logic programming and practical AI applications
+- Special thanks to the Prolog and Go communities
+
+---
+
+**Made with ❤️ for the intersection of symbolic AI and neural networks**
