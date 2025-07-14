@@ -196,6 +196,9 @@ func (e *Engine) evalBuiltin(goal Term, subst Substitution, sessionID int) ([]Su
 		return e.handleDateAfter(goal, subst)
 	case "days_between":
 		return e.handleDaysBetween(goal, subst)
+	case "help":
+		// Help predicate always succeeds (used by UI for command detection)
+		return []Substitution{subst}, true
 	}
 
 	return nil, false
@@ -488,9 +491,48 @@ func (e *Engine) mergeSubstitutions(s1, s2 Substitution) Substitution {
 var globalVarCounter int = 0
 
 func (e *Engine) renameVars(rule Rule) Rule {
-	// Disable variable renaming for now to fix integration tests
-	// TODO: Implement proper variable renaming that preserves binding relationships
-	return rule
+	// Create a mapping for variable renaming
+	varMap := make(map[string]string)
+	globalVarCounter++
+	suffix := fmt.Sprintf("_%d", globalVarCounter)
+	
+	// Rename variables in the head
+	renamedHead := e.renameTermVars(rule.Head, varMap, suffix)
+	
+	// Rename variables in the body
+	renamedBody := make([]Term, len(rule.Body))
+	for i, term := range rule.Body {
+		renamedBody[i] = e.renameTermVars(term, varMap, suffix)
+	}
+	
+	return Rule{
+		ID:        rule.ID,
+		SessionID: rule.SessionID,
+		Head:      renamedHead,
+		Body:      renamedBody,
+	}
+}
+
+func (e *Engine) renameTermVars(term Term, varMap map[string]string, suffix string) Term {
+	switch term.Type {
+	case "variable":
+		varName := term.Value.(string)
+		if newName, exists := varMap[varName]; exists {
+			return Variable(newName)
+		}
+		newName := varName + suffix
+		varMap[varName] = newName
+		return Variable(newName)
+	case "compound":
+		newArgs := make([]Term, len(term.Args))
+		for i, arg := range term.Args {
+			newArgs[i] = e.renameTermVars(arg, varMap, suffix)
+		}
+		return Compound(term.Value.(string), newArgs)
+	default:
+		// Atoms and numbers don't need renaming
+		return term
+	}
 }
 
 func (e *Engine) loadFacts(goal Term, sessionID int) []Fact {
@@ -585,14 +627,44 @@ func (e *Engine) Query(query Query, sessionID int) QueryResult {
 		result.Solutions = []Solution{{Success: false}}
 	} else {
 		for _, subst := range solutions {
+			// Only include bindings for variables that appeared in the original query
+			cleanedBindings := e.extractQueryBindings(query.Goals, subst)
 			result.Solutions = append(result.Solutions, Solution{
-				Bindings: subst,
+				Bindings: cleanedBindings,
 				Success:  true,
 			})
 		}
 	}
 
 	return result
+}
+
+func (e *Engine) extractQueryBindings(goals []Term, subst Substitution) Substitution {
+	queryVars := make(map[string]bool)
+	// Collect all variables from the query
+	for _, goal := range goals {
+		e.collectVars(goal, queryVars)
+	}
+	
+	// Create a new substitution with only query variables, fully dereferenced
+	cleaned := make(Substitution)
+	for varName := range queryVars {
+		if val, exists := subst[varName]; exists {
+			cleaned[varName] = e.deref(val, subst)
+		}
+	}
+	return cleaned
+}
+
+func (e *Engine) collectVars(term Term, vars map[string]bool) {
+	switch term.Type {
+	case "variable":
+		vars[term.Value.(string)] = true
+	case "compound":
+		for _, arg := range term.Args {
+			e.collectVars(arg, vars)
+		}
+	}
 }
 
 func (e *Engine) ClearCache() {

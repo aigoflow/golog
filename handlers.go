@@ -219,6 +219,12 @@ func (e *Engine) addFactHandler(c *gin.Context) {
 	}
 
 	fact.SessionID = sessionId
+	
+	// Validate that predicate is not empty
+	if fact.Predicate.Type == "" || fact.Predicate.Value == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "predicate is required"})
+		return
+	}
 
 	if err := e.AddFact(fact); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

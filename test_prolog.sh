@@ -3,9 +3,10 @@
 # Prolog Server Test Suite
 # Run this after starting the server with: go run main.go
 
-BASE_URL="http://localhost:8080"
+BASE_URL="http://localhost:3000/api/v1"
 FAILED=0
 PASSED=0
+SESSION_ID=""
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,8 +19,8 @@ echo "==============================="
 
 # Helper function to check if server is running
 check_server() {
-    if ! curl -s "$BASE_URL" > /dev/null 2>&1; then
-        echo -e "${RED}❌ Server not running on $BASE_URL${NC}"
+    if ! curl -s "http://localhost:3000" > /dev/null 2>&1; then
+        echo -e "${RED}❌ Server not running on http://localhost:3000${NC}"
         echo "Start the server first: go run main.go"
         exit 1
     fi
@@ -63,12 +64,33 @@ assert_contains() {
 
 check_server
 
+echo -e "\n${YELLOW}🔑 Creating Test Session${NC}"
+echo "------------------------"
+
+# Create a new session for testing
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "test-session-'$(date +%s)'",
+    "description": "Automated test session"
+  }')
+
+# Extract session ID from response
+SESSION_ID=$(echo "$response" | sed '$d' | jq -r '.id')
+if [ -z "$SESSION_ID" ] || [ "$SESSION_ID" = "null" ]; then
+    echo -e "${RED}❌ Failed to create session${NC}"
+    echo "Response: $response"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Created session with ID: $SESSION_ID${NC}"
+
 echo -e "\n${YELLOW}📝 Testing Basic Facts${NC}"
 echo "----------------------"
 
 # Test 1: Add simple atom fact
 echo "Test 1: Add atom fact - likes(mary, pizza)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/facts" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/facts" \
   -H "Content-Type: application/json" \
   -d '{
     "predicate": {
@@ -84,7 +106,7 @@ assert_response "Add likes fact" "200" "$response"
 
 # Test 2: Add compound fact with variables
 echo "Test 2: Add fact - parent(john, mary)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/facts" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/facts" \
   -H "Content-Type: application/json" \
   -d '{
     "predicate": {
@@ -100,7 +122,7 @@ assert_response "Add parent fact" "200" "$response"
 
 # Test 3: Add another parent fact
 echo "Test 3: Add fact - parent(mary, ann)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/facts" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/facts" \
   -H "Content-Type: application/json" \
   -d '{
     "predicate": {
@@ -119,7 +141,7 @@ echo "------------------------"
 
 # Test 4: Query with atom
 echo "Test 4: Query - likes(mary, pizza)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/query" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/query" \
   -H "Content-Type: application/json" \
   -d '{
     "goals": [{
@@ -136,7 +158,7 @@ assert_contains "Query returns success" '"success":true' "$response"
 
 # Test 5: Query with variable
 echo "Test 5: Query - parent(X, mary)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/query" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/query" \
   -H "Content-Type: application/json" \
   -d '{
     "goals": [{
@@ -153,7 +175,7 @@ assert_contains "Variable binding found" '"X"' "$response"
 
 # Test 6: Query that should fail
 echo "Test 6: Query - parent(bob, charlie) [should fail]"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/query" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/query" \
   -H "Content-Type: application/json" \
   -d '{
     "goals": [{
@@ -173,7 +195,7 @@ echo "----------------"
 
 # Test 7: Add a rule - grandparent(X,Z) :- parent(X,Y), parent(Y,Z)
 echo "Test 7: Add rule - grandparent(X,Z) :- parent(X,Y), parent(Y,Z)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/rules" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/rules" \
   -H "Content-Type: application/json" \
   -d '{
     "head": {
@@ -207,7 +229,7 @@ assert_response "Add grandparent rule" "200" "$response"
 
 # Test 8: Query using the rule
 echo "Test 8: Query - grandparent(john, ann)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/query" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/query" \
   -H "Content-Type: application/json" \
   -d '{
     "goals": [{
@@ -227,7 +249,7 @@ echo "--------------------"
 
 # Test 9: Unification built-in
 echo "Test 9: Test unification - =(X, mary)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/query" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/query" \
   -H "Content-Type: application/json" \
   -d '{
     "goals": [{
@@ -244,7 +266,7 @@ assert_contains "Unification binds variable" '"X"' "$response"
 
 # Test 10: Type checking built-in
 echo "Test 10: Test type checking - atom(mary)"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/query" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/query" \
   -H "Content-Type: application/json" \
   -d '{
     "goals": [{
@@ -260,7 +282,7 @@ assert_contains "Atom check succeeds" '"success":true' "$response"
 
 # Test 11: Variable type check
 echo "Test 11: Test variable check - var(X)"  
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/query" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/query" \
   -H "Content-Type: application/json" \
   -d '{
     "goals": [{
@@ -279,17 +301,24 @@ echo "----------------------"
 
 # Test 12: Invalid JSON
 echo "Test 12: Invalid JSON request"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/facts" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/facts" \
   -H "Content-Type: application/json" \
   -d '{invalid json}')
 assert_response "Invalid JSON" "400" "$response"
 
 # Test 13: Missing required fields
 echo "Test 13: Missing predicate field"
-response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/facts" \
+response=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/sessions/$SESSION_ID/facts" \
   -H "Content-Type: application/json" \
   -d '{}')
-assert_response "Missing predicate" "500" "$response"
+assert_response "Missing predicate" "400" "$response"
+
+echo -e "\n${YELLOW}🧹 Cleaning Up${NC}"
+echo "-------------"
+
+# Delete the test session
+response=$(curl -s -w "\n%{http_code}" -X DELETE "$BASE_URL/sessions/$SESSION_ID")
+assert_response "Delete test session" "200" "$response"
 
 echo -e "\n${YELLOW}📊 Test Results${NC}"
 echo "================"
